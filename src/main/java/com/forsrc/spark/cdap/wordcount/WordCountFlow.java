@@ -1,5 +1,6 @@
 package com.forsrc.spark.cdap.wordcount;
 
+import co.cask.cdap.api.annotation.ProcessInput;
 import co.cask.cdap.api.flow.AbstractFlow;
 
 public class WordCountFlow extends AbstractFlow {
@@ -21,8 +22,12 @@ public class WordCountFlow extends AbstractFlow {
         addFlowlet("unique", new WordCountUniqueFlowlet(config.getUniqueDatasetTableName()));
 
         connectStream(config.getStream(), "splitter");
+        //array words
         connect("splitter", "associator");
+        //one   word
         connect("splitter", "counter");
+
+        // OutputEmitter --> @ProcessInput
         connect("counter", "unique");
     }
 }

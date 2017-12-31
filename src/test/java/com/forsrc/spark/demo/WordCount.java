@@ -21,6 +21,9 @@ public class WordCount {
 
         SparkConf sparkConf = new SparkConf().setAppName("forsrc-spark-wordcount").setMaster("local");
         JavaSparkContext javaSparkContext = new JavaSparkContext(sparkConf);
+        
+        //JavaSparkContext javaSparkContext = new JavaSparkContext(
+                //"local", "wordcount", System.getenv("SPARK_HOME"), System.getenv("JARS"));
 
         JavaRDD<String> dataRdd = javaSparkContext.textFile(filename);
 

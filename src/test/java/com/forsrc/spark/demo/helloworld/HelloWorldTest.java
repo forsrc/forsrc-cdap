@@ -26,6 +26,7 @@ import co.cask.cdap.test.TestBase;
 import co.cask.cdap.test.TestConfiguration;
 
 import com.forsrc.spark.cdap.helloworld.HelloWorldApplication;
+import com.forsrc.spark.cdap.helloworld.HelloWorldConfig;
 import com.forsrc.spark.cdap.helloworld.HelloWorldService;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
@@ -50,12 +51,14 @@ public class HelloWorldTest extends TestBase {
         // Deploy the HelloWorld application
         ApplicationManager appManager = deployApplication(HelloWorldApplication.class);
 
+        HelloWorldConfig config = new HelloWorldConfig();
+
         // Start WhoFlow
-        FlowManager flowManager = appManager.getFlowManager("WhoFlow").start();
+        FlowManager flowManager = appManager.getFlowManager(config.getFlowName()).start();
         flowManager.waitForStatus(true);
 
         // Send stream events to the "who" Stream
-        StreamManager streamManager = getStreamManager("who");
+        StreamManager streamManager = getStreamManager(config.getStream());
         streamManager.send("1");
         streamManager.send("2");
         streamManager.send("3");
@@ -64,7 +67,7 @@ public class HelloWorldTest extends TestBase {
 
         try {
             // Wait for the last Flowlet processing 5 events, or at most 5 seconds
-            RuntimeMetrics metrics = flowManager.getFlowletMetrics("saver");
+            RuntimeMetrics metrics = flowManager.getFlowletMetrics(config.getSaver());
             metrics.waitForProcessed(5, 5, TimeUnit.SECONDS);
         } finally {
             flowManager.stop();

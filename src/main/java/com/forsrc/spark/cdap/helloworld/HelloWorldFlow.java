@@ -7,9 +7,10 @@ public class HelloWorldFlow extends AbstractFlow {
 
     @Override
     protected void configure() {
-        setName("WhoFlow");
+        HelloWorldConfig config = new HelloWorldConfig();
+        setName(config.getFlowName());
         setDescription("A flow that collects names");
-        addFlowlet("saver", new HelloWorldFlowlet());
-        connectStream("who", "saver");
+        addFlowlet(config.getSaver(), new HelloWorldFlowlet());
+        connectStream(config.getStream(), config.getSaver());
     }
 }

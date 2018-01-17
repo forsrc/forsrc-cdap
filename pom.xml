@@ -26,7 +26,8 @@
     <name>CDAP Spark Java App Project</name>
 
     <modules>
-        <module>wordcount</module>
+        <module>forsrc-cap-app-wordcount</module>
+        <module>forsrc-cap-app-spark</module>
     </modules>
 
     <properties>

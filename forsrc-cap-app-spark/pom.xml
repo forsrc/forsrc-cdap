@@ -32,7 +32,7 @@
     </parent>
 
     <properties>
-        <app.main.class>com.forsrc.spark.cdap.wordcount.WordCountApplication</app.main.class>
+        <app.main.class>com.forsrc.spark.cdap.spark.SparkWordCountApplication</app.main.class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <cdap.version>4.3.2</cdap.version>

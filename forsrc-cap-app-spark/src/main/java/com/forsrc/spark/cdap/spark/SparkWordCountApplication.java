@@ -9,10 +9,10 @@ public class SparkWordCountApplication extends AbstractApplication<SparkWordCoun
 
     @Override
     public void configure() {
-        setName("HelloWorld");
+        setName("sparkWordCountApplication");
         setDescription("A Hello World program for the Cask Data Application Platform");
         addStream(new Stream(getConfig().getStream()));
-        createDataset("whom", KeyValueTable.class, DatasetProperties.builder().setDescription("Store names").build());
+        createDataset("sparkWordCountStream", KeyValueTable.class, DatasetProperties.builder().setDescription("Store names").build());
         addFlow(new SparkWordCountFlow());
         addService(new SparkWordCountService());
 

@@ -12,7 +12,7 @@ public class SparkWordCountFlowlet extends AbstractFlowlet {
 
     static final byte[] NAME = Bytes.toBytes("name");
 
-    @UseDataSet("sparkWordCountKeyValueTable")
+    @UseDataSet("sparkWordCountStream")
     private KeyValueTable kvKeyValueTable;
 
     private Metrics metrics;

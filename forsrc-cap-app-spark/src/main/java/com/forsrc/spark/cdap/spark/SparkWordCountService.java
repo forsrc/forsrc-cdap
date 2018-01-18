@@ -5,7 +5,7 @@ import co.cask.cdap.api.service.AbstractService;
 
 public class SparkWordCountService extends AbstractService {
 
-    public static final String SERVICE_NAME = "Greeting";
+    public static final String SERVICE_NAME = "sparkWordCountService";
 
     @Override
     protected void configure() {

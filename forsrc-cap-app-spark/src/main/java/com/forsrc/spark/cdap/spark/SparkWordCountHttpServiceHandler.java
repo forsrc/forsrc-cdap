@@ -14,7 +14,7 @@ import co.cask.cdap.api.service.http.HttpServiceResponder;
 
 public class SparkWordCountHttpServiceHandler extends AbstractHttpServiceHandler {
 
-    @UseDataSet("sparkWordCountKeyValueTable")
+    @UseDataSet("sparkWordCountStream")
     private KeyValueTable kvKeyValueTable;
 
     private Metrics metrics;

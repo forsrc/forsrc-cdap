@@ -16,7 +16,11 @@ public class SparkWordCountApplication extends AbstractApplication<SparkWordCoun
 
         createDataset(SparkWordCountConfig.KEY_VALUE_DATASET, KeyValueTable.class, DatasetProperties.builder().setDescription("Store names").build());
 
-        addFlow(new SparkWordCountFlow());
+        addSpark(new SparkWordCountSpark());
+        addWorkflow(new SparkWordCountWorkflow());
+
+       //addFlow(new SparkWordCountFlow());
+
         addService(new SparkWordCountService());
 
     }

@@ -10,23 +10,26 @@ import co.cask.cdap.api.metrics.Metrics;
 
 public class SparkWordCountFlowlet extends AbstractFlowlet {
 
-    static final byte[] NAME = Bytes.toBytes("name");
 
-    @UseDataSet("sparkWordCountStream")
+
+    @UseDataSet(SparkWordCountConfig.KEY_VALUE_DATASET)
     private KeyValueTable kvKeyValueTable;
 
     private Metrics metrics;
 
-    @ProcessInput
-    public void process(StreamEvent event) {
-        byte[] name = Bytes.toBytes(event.getBody());
-        if (name.length > 0) {
-            kvKeyValueTable.write(NAME, name);
+//    @ProcessInput
+//    public void process(StreamEvent event) {
+//        String word = Bytes.toString(event.getBody());
+//     // Count number of times we have seen this word
+//        this.kvKeyValueTable.increment(Bytes.toBytes(word), 1L);
+//        metrics.count("word."  + word, Bytes.toInt(this.kvKeyValueTable.read(word)));
+//    }
 
-            if (name.length > 10) {
-                metrics.count("names.longnames", 1);
-            }
-            metrics.count("names.bytes", name.length);
-        }
+    @ProcessInput("wordOut")
+    public void process(String word) {
+        // Count number of times we have seen this word
+        this.kvKeyValueTable.increment(Bytes.toBytes(word), 1L);
+        metrics.count("word."  + word, Bytes.toInt(this.kvKeyValueTable.read(word)));
+
     }
 }

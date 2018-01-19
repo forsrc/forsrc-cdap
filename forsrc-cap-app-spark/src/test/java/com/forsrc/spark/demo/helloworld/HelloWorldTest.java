@@ -30,12 +30,16 @@ import com.forsrc.spark.cdap.spark.SparkWordCountConfig;
 import com.forsrc.spark.cdap.spark.SparkWordCountService;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -59,11 +63,11 @@ public class HelloWorldTest extends TestBase {
 
         // Send stream events to the "who" Stream
         StreamManager streamManager = getStreamManager(config.getStream());
-        streamManager.send("1");
-        streamManager.send("2");
-        streamManager.send("3");
-        streamManager.send("4");
-        streamManager.send("5");
+        streamManager.send("A");
+        streamManager.send("A B");
+        streamManager.send("A C");
+        streamManager.send("D");
+        streamManager.send("E");
 
         try {
             // Wait for the last Flowlet processing 5 events, or at most 5 seconds
@@ -80,7 +84,7 @@ public class HelloWorldTest extends TestBase {
         // Wait service startup
         serviceManager.waitForStatus(true);
 
-        URL url = new URL(serviceManager.getServiceURL(), "sparkWordCount");
+        URL url = new URL(serviceManager.getServiceURL(), "sparkWordCount/A");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         Assert.assertEquals(HttpURLConnection.HTTP_OK, connection.getResponseCode());
         String response;
@@ -90,7 +94,9 @@ public class HelloWorldTest extends TestBase {
             connection.disconnect();
         }
         System.err.println(response);
-        Assert.assertEquals("Hello 5!", response);
+        Gson gson = new Gson();
+        Map<String, Integer> map = gson.fromJson(response, new TypeToken<Map<String, Integer>>(){}.getType());
+        Assert.assertEquals(3, map.get("count").intValue());
 
         // serviceManager.stop();
         appManager.stopAll();

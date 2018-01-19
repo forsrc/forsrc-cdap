@@ -9,7 +9,7 @@ public class SparkWordCountSpark extends AbstractSpark {
 
     @Override
     public void configure() {
-      setName("SparkWordCount-SparkProgram");
+      setName(SparkWordCountSpark.class.getSimpleName());
       setDescription("Spark kWordCount Program");
       setMainClass(SparkWordCountJavaSparkMain.class);
       setDriverResources(new Resources(1024));

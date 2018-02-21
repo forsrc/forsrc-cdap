@@ -1,158 +1,245 @@
 {
-    "name": "streamETLApp_v2",
-    "artifact": {
-        "name": "cdap-data-pipeline",
-        "version": "4.3.3",
-        "scope": "SYSTEM"
+  "name": "streamETLApp",
+  "artifact": {
+    "name": "cdap-data-pipeline",
+    "version": "4.3.3",
+    "scope": "SYSTEM"
+  },
+  "config": {
+    "resources": {
+      "memoryMB": 1024,
+      "virtualCores": 1
     },
-    "config": {
-        "resources": {
-            "memoryMB": 1024,
-            "virtualCores": 1
+    "driverResources": {
+      "memoryMB": 1024,
+      "virtualCores": 1
+    },
+    "schedule": "0/1 * * * *",
+    "connections": [
+      {
+        "from": "streamSource",
+        "to": "JS-1"
+      },
+      {
+        "from": "JS-1",
+        "to": "tableSink"
+      },
+      {
+        "from": "JS-1",
+        "to": "JS-2-KV"
+      },
+      {
+        "from": "JS-2-KV",
+        "to": "DB-KV-1"
+      }
+    ],
+    "comments": [],
+    "postActions": [
+      {
+        "name": "Email-1",
+        "plugin": {
+          "name": "Email",
+          "type": "postaction",
+          "artifact": {
+            "name": "core-plugins",
+            "version": "1.8.3",
+            "scope": "SYSTEM"
+          },
+          "properties": {
+            "runCondition": "completion",
+            "includeWorkflowToken": "false",
+            "recipients": "users@example.com",
+            "sender": "admin@example.com",
+            "subject": "Post-action Status",
+            "message": "Completed run."
+          }
+        }
+      }
+    ],
+    "engine": "mapreduce",
+    "stages": [
+      {
+        "name": "streamSource",
+        "plugin": {
+          "name": "Stream",
+          "type": "batchsource",
+          "label": "streamSource",
+          "artifact": {
+            "name": "core-plugins",
+            "version": "1.8.3",
+            "scope": "SYSTEM"
+          },
+          "properties": {
+            "name": "myStream",
+            "duration": "10m",
+            "format": "text",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"body\",\"type\":\"string\"}]}"
+          }
         },
-        "driverResources": {
-            "memoryMB": 1024,
-            "virtualCores": 1
+        "outputSchema": [
+          {
+            "name": "etlSchemaBody",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"body\",\"type\":\"string\"}]}"
+          }
+        ],
+        "type": "batchsource",
+        "label": "streamSource",
+        "icon": "icon-streams",
+        "_uiPosition": {
+          "top": "145px",
+          "left": "50px"
+        }
+      },
+      {
+        "name": "JS-1",
+        "plugin": {
+          "name": "JavaScript",
+          "type": "transform",
+          "label": "JS-1",
+          "artifact": {
+            "name": "core-plugins",
+            "version": "1.8.3",
+            "scope": "SYSTEM"
+          },
+          "properties": {
+            "script": "/**\n * @summary Transforms the provided input record into zero or more output records or errors.\n\n * Input records are available in JavaScript code as JSON objects. \n\n * @param input an object that contains the input record as a JSON.   e.g. to access a field called 'total' from the input record, use input.total.\n * @param emitter an object that can be used to emit zero or more records (using the emitter.emit() method) or errors (using the emitter.emitError() method) \n * @param context an object that provides access to:\n *            1. CDAP Metrics - context.getMetrics().count('output', 1);\n *            2. CDAP Logs - context.getLogger().debug('Received a record');\n *            3. Lookups - context.getLookup('blacklist').lookup(input.id); or\n *            4. Runtime Arguments - context.getArguments.get('priceThreshold') \n */ \nfunction transform(input, emitter, context) {\n \n  context.getLogger().debug(\"--> JS-1 -> ts: \" + input.ts);\n  context.getLogger().debug(\"--> JS-1 -> body: \" + input.body);\n  try {\n    var json = JSON.parse(input.body);\n\n    context.getLogger().info(\"--> JS-1 -> json.message: \" + json.message);\n    if (json.message) {\n      context.getMetrics().count('output', 1);\n      input.body = json.message;\n      emitter.emit(input);\n    }\n  }\n  catch(error) {\n    context.getLogger().warn(error);\n  }\n\n\n\n}",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
+          }
         },
-        "schedule": "0/1 * * * *",
-        "connections": [
-            {
-                "from": "streamSource",
-                "to": "JavaScript"
-            },
-            {
-                "from": "JavaScript",
-                "to": "tableSink"
-            }
+        "outputSchema": [
+          {
+            "name": "etlSchemaBody",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
+          }
         ],
-        "comments": [],
-        "postActions": [
-            {
-                "name": "Email-1",
-                "plugin": {
-                    "name": "Email",
-                    "type": "postaction",
-                    "artifact": {
-                        "name": "core-plugins",
-                        "version": "1.8.3",
-                        "scope": "SYSTEM"
-                    },
-                    "properties": {
-                        "runCondition": "completion",
-                        "includeWorkflowToken": "false",
-                        "recipients": "users@example.com",
-                        "sender": "admin@example.com",
-                        "subject": "Post-action Status",
-                        "message": "Completed run."
-                    }
-                }
-            }
+        "inputSchema": [
+          {
+            "name": "streamSource",
+            "schema": "{\"name\":\"etlSchemaBody\",\"type\":\"record\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
+          }
         ],
-        "engine": "mapreduce",
-        "stages": [
-            {
-                "name": "streamSource",
-                "plugin": {
-                    "name": "Stream",
-                    "type": "batchsource",
-                    "label": "streamSource",
-                    "artifact": {
-                        "name": "core-plugins",
-                        "version": "1.8.3",
-                        "scope": "SYSTEM"
-                    },
-                    "properties": {
-                        "name": "myStream",
-                        "duration": "10m",
-                        "format": "text",
-                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"body\",\"type\":\"string\"}]}"
-                    }
-                },
-                "outputSchema": [
-                    {
-                        "name": "etlSchemaBody",
-                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"body\",\"type\":\"string\"}]}"
-                    }
-                ],
-                "type": "batchsource",
-                "label": "streamSource",
-                "icon": "icon-streams",
-                "_uiPosition": {
-                    "top": "50px",
-                    "left": "50px"
-                }
-            },
-            {
-                "name": "JavaScript",
-                "plugin": {
-                    "name": "JavaScript",
-                    "type": "transform",
-                    "label": "JavaScript",
-                    "artifact": {
-                        "name": "core-plugins",
-                        "version": "1.8.3",
-                        "scope": "SYSTEM"
-                    },
-                    "properties": {
-                        "script": "/**\n * @summary Transforms the provided input record into zero or more output records or errors.\n\n * Input records are available in JavaScript code as JSON objects. \n\n * @param input an object that contains the input record as a JSON.   e.g. to access a field called 'total' from the input record, use input.total.\n * @param emitter an object that can be used to emit zero or more records (using the emitter.emit() method) or errors (using the emitter.emitError() method) \n * @param context an object that provides access to:\n *            1. CDAP Metrics - context.getMetrics().count('output', 1);\n *            2. CDAP Logs - context.getLogger().debug('Received a record');\n *            3. Lookups - context.getLookup('blacklist').lookup(input.id); or\n *            4. Runtime Arguments - context.getArguments.get('priceThreshold') \n */ \nfunction transform(input, emitter, context) {\n  context.getMetrics().count('output', 1);\n  context.getLogger().debug(\"--> ts: \" + input.ts);\n  context.getLogger().debug(\"--> body: \" + input.body);\n  try {\n    var json = JSON.parse(input.body);\n\n    context.getLogger().info(\"--> json.message: \" + json.message);\n    if (json.message) {\n      emitter.emit(json.message);\n    }\n  }\n  catch(error) {\n    context.getLogger().warn(error);\n  }\n\n\n\n}",
-                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
-                    }
-                },
-                "outputSchema": [
-                    {
-                        "name": "etlSchemaBody",
-                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
-                    }
-                ],
-                "inputSchema": [
-                    {
-                        "name": "streamSource",
-                        "schema": "{\"name\":\"etlSchemaBody\",\"type\":\"record\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
-                    }
-                ],
-                "type": "transform",
-                "label": "JavaScript",
-                "icon": "icon-javascript",
-                "_uiPosition": {
-                    "top": "50px",
-                    "left": "350px"
-                }
-            },
-            {
-                "name": "tableSink",
-                "plugin": {
-                    "name": "Table",
-                    "type": "batchsink",
-                    "label": "tableSink",
-                    "artifact": {
-                        "name": "core-plugins",
-                        "version": "1.8.3",
-                        "scope": "SYSTEM"
-                    },
-                    "properties": {
-                        "name": "myTable",
-                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
-                        "schema.row.field": "ts"
-                    }
-                },
-                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
-                "inputSchema": [
-                    {
-                        "schema": "{\"name\":\"etlSchemaBody\",\"type\":\"record\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
-                    }
-                ],
-                "type": "batchsink",
-                "label": "tableSink",
-                "icon": "icon-table",
-                "_uiPosition": {
-                    "top": "50px",
-                    "left": "650px"
-                }
-            }
+        "type": "transform",
+        "label": "JS-1",
+        "icon": "icon-javascript",
+        "_uiPosition": {
+          "top": "145px",
+          "left": "350px"
+        }
+      },
+      {
+        "name": "tableSink",
+        "plugin": {
+          "name": "Table",
+          "type": "batchsink",
+          "label": "tableSink",
+          "artifact": {
+            "name": "core-plugins",
+            "version": "1.8.3",
+            "scope": "SYSTEM"
+          },
+          "properties": {
+            "name": "myTable",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+            "schema.row.field": "ts"
+          }
+        },
+        "outputSchema": [
+          {
+            "name": "etlSchemaBody",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+          }
         ],
-        "properties": {},
-        "processTimingEnabled": true,
-        "stageLoggingEnabled": true,
-        "maxConcurrentRuns": 1
-    }
+        "inputSchema": [
+          {
+            "name": "JS-1",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
+          }
+        ],
+        "type": "batchsink",
+        "label": "tableSink",
+        "icon": "icon-table",
+        "_uiPosition": {
+          "top": "50px",
+          "left": "650px"
+        }
+      },
+      {
+        "name": "JS-2-KV",
+        "plugin": {
+          "name": "JavaScript",
+          "type": "transform",
+          "label": "JS-2-KV",
+          "artifact": {
+            "name": "core-plugins",
+            "version": "1.8.3",
+            "scope": "SYSTEM"
+          },
+          "properties": {
+            "script": "/**\n * @summary Transforms the provided input record into zero or more output records or errors.\n\n * Input records are available in JavaScript code as JSON objects. \n\n * @param input an object that contains the input record as a JSON.   e.g. to access a field called 'total' from the input record, use input.total.\n * @param emitter an object that can be used to emit zero or more records (using the emitter.emit() method) or errors (using the emitter.emitError() method) \n * @param context an object that provides access to:\n *            1. CDAP Metrics - context.getMetrics().count('output', 1);\n *            2. CDAP Logs - context.getLogger().debug('Received a record');\n *            3. Lookups - context.getLookup('blacklist').lookup(input.id); or\n *            4. Runtime Arguments - context.getArguments.get('priceThreshold') \n */ \nfunction transform(input, emitter, context) {\n  context.getMetrics().count('output.js-1', 1);\n  context.getLogger().debug(\"--> JS-2-KV -> ts: \" + input.ts);\n  context.getLogger().debug(\"--> JS-2-KV -> body: \" + input.body);\n  emitter.emit(input);\n}",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"bytes\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"bytes\",\"values\":\"bytes\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
+          }
+        },
+        "outputSchema": [
+          {
+            "name": "etlSchemaBody",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"bytes\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"bytes\",\"values\":\"bytes\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
+          }
+        ],
+        "inputSchema": [
+          {
+            "name": "JS-1",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"string\"}]}"
+          }
+        ],
+        "type": "transform",
+        "label": "JS-2-KV",
+        "icon": "icon-javascript",
+        "_uiPosition": {
+          "top": "240px",
+          "left": "650px"
+        }
+      },
+      {
+        "name": "DB-KV-1",
+        "plugin": {
+          "name": "KVTable",
+          "type": "batchsink",
+          "label": "DB-KV-1",
+          "artifact": {
+            "name": "core-plugins",
+            "version": "1.8.3",
+            "scope": "SYSTEM"
+          },
+          "properties": {
+            "name": "DB-KV-1",
+            "key.field": "ts",
+            "value.field": "body"
+          }
+        },
+        "outputSchema": [
+          {
+            "name": "etlSchemaBody",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"bytes\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"bytes\",\"values\":\"bytes\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
+          }
+        ],
+        "inputSchema": [
+          {
+            "name": "JS-2-KV",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"bytes\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"bytes\",\"values\":\"bytes\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
+          }
+        ],
+        "type": "batchsink",
+        "label": "DB-KV-1",
+        "icon": "icon-kvtable",
+        "_uiPosition": {
+          "top": "240px",
+          "left": "950px"
+        }
+      }
+    ],
+    "properties": {},
+    "processTimingEnabled": true,
+    "stageLoggingEnabled": true,
+    "maxConcurrentRuns": 1
+  }
 }

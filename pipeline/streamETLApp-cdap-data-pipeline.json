@@ -26,10 +26,10 @@
       },
       {
         "from": "JS-1",
-        "to": "JS-2-KV"
+        "to": "Projection-1"
       },
       {
-        "from": "JS-2-KV",
+        "from": "Projection-1",
         "to": "DB-KV-1"
       }
     ],
@@ -76,12 +76,7 @@
             "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"body\",\"type\":\"string\"}]}"
           }
         },
-        "outputSchema": [
-          {
-            "name": "etlSchemaBody",
-            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"body\",\"type\":\"string\"}]}"
-          }
-        ],
+        "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"body\",\"type\":\"string\"}]}",
         "type": "batchsource",
         "label": "streamSource",
         "icon": "icon-streams",
@@ -143,12 +138,7 @@
             "schema.row.field": "ts"
           }
         },
-        "outputSchema": [
-          {
-            "name": "etlSchemaBody",
-            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
-          }
-        ],
+        "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
         "inputSchema": [
           {
             "name": "JS-1",
@@ -164,25 +154,25 @@
         }
       },
       {
-        "name": "JS-2-KV",
+        "name": "Projection-1",
         "plugin": {
-          "name": "JavaScript",
+          "name": "Projection",
           "type": "transform",
-          "label": "JS-2-KV",
+          "label": "Projection-1",
           "artifact": {
             "name": "core-plugins",
             "version": "1.8.3",
             "scope": "SYSTEM"
           },
           "properties": {
-            "script": "/**\n * @summary Transforms the provided input record into zero or more output records or errors.\n\n * Input records are available in JavaScript code as JSON objects. \n\n * @param input an object that contains the input record as a JSON.   e.g. to access a field called 'total' from the input record, use input.total.\n * @param emitter an object that can be used to emit zero or more records (using the emitter.emit() method) or errors (using the emitter.emitError() method) \n * @param context an object that provides access to:\n *            1. CDAP Metrics - context.getMetrics().count('output', 1);\n *            2. CDAP Logs - context.getLogger().debug('Received a record');\n *            3. Lookups - context.getLookup('blacklist').lookup(input.id); or\n *            4. Runtime Arguments - context.getArguments.get('priceThreshold') \n */ \nfunction transform(input, emitter, context) {\n  context.getMetrics().count('output.js-1', 1);\n  context.getLogger().debug(\"--> JS-2-KV -> ts: \" + input.ts);\n  context.getLogger().debug(\"--> JS-2-KV -> body: \" + input.body);\n  emitter.emit(input);\n}",
-            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"bytes\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"bytes\",\"values\":\"bytes\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
+            "convert": "ts:bytes,body:bytes",
+            "keep": "ts,body"
           }
         },
         "outputSchema": [
           {
             "name": "etlSchemaBody",
-            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"bytes\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"bytes\",\"values\":\"bytes\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"bytes\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
           }
         ],
         "inputSchema": [
@@ -192,8 +182,8 @@
           }
         ],
         "type": "transform",
-        "label": "JS-2-KV",
-        "icon": "icon-javascript",
+        "label": "Projection-1",
+        "icon": "icon-projection",
         "_uiPosition": {
           "top": "240px",
           "left": "650px"
@@ -216,16 +206,11 @@
             "value.field": "body"
           }
         },
-        "outputSchema": [
-          {
-            "name": "etlSchemaBody",
-            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"bytes\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"bytes\",\"values\":\"bytes\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
-          }
-        ],
+        "outputSchema": "{\"name\":\"etlSchemaBody\",\"type\":\"record\",\"fields\":[{\"name\":\"key\",\"type\":\"bytes\"},{\"name\":\"value\",\"type\":\"bytes\"}]}",
         "inputSchema": [
           {
-            "name": "JS-2-KV",
-            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"bytes\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"bytes\",\"values\":\"bytes\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
+            "name": "Projection-1",
+            "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ts\",\"type\":\"long\"},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"keys\":\"string\",\"values\":\"string\"}},{\"name\":\"body\",\"type\":\"bytes\"}]}"
           }
         ],
         "type": "batchsink",
